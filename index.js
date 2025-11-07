@@ -119,22 +119,47 @@ async function run() {
         })
 
         // Patch Method
+        // app.patch("/model/:id", verifyFirebaseToken, async (req, res) => {
+        //     const id = req.params.id;
+        //     const updateModel = req.body;
+        //     const query = { _id: new ObjectId(id) };
+
+        //     const update = {
+        //         $set: {
+        //             name: updateModel.name,
+        //             profession: updateModel.profession,
+        //         },
+        //     };
+        //     const options = {};
+        //     const result = await modelCollection.updateOne(query, update, options);
+        //     res.send(result);
+        // });
+
         app.patch("/model/:id", verifyFirebaseToken, async (req, res) => {
-            const id = req.params.id;
-            const updateModel = req.body;
-            const query = { _id: new ObjectId(id) };
+            try {
+                const id = req.params.id;
+                const updateModel = req.body;
+                const query = { _id: new ObjectId(id) };
 
-            const update = {
-                $set: {
-                    name: updateModel.name,
-                    profession: updateModel.profession,
-                },
-            };
-            const options = {};
-            const result = await modelCollection.updateOne(query, update, options);
-            res.send(result);
+                const update = {
+                    $set: {
+                        name: updateModel.name,
+                        category: updateModel.category,
+                        description: updateModel.description,
+                        thumbnail: updateModel.thumbnail,
+                    },
+                };
+
+                const options = {}; // optional, MongoDB default options
+                const result = await modelCollection.updateOne(query, update, options);
+
+                res.send(result);
+            } catch (err) {
+                console.error(err);
+                res.status(500).send({ error: err.message });
+            }
         });
-
+        
         // Delete Method 
         app.delete("/model/:id", async (req, res) => {
             const id = req.params.id;
