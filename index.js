@@ -20,7 +20,7 @@ app.use(express.json());
 
 // Verify and Secure Server Side 
 const verifyFirebaseToken = async (req, res, next) => {
-    // console.log("Firebase-Token: ", req.headers.authorization);
+
     if (!req.headers.authorization) {
         return res.status(401).send({ message: "unauthorized access" })
     }
@@ -112,29 +112,46 @@ async function run() {
         })
 
         // Post Method for Download
+        // app.post("/downloads", verifyFirebaseToken, async (req, res) => {
+        //     const data = req.body
+        //     const result = await downloadCollection.insertOne(data)
+        //     res.send(result)
+        // })
+
+        // Post Method for Download
         app.post("/downloads", verifyFirebaseToken, async (req, res) => {
-            const data = req.body
-            const result = await downloadCollection.insertOne(data)
-            res.send(result)
-        })
+            try {
+                const data = req.body;
+                const modelId = data._id;
+
+                if (!modelId) {
+                    return res.status(400).send({ success: false, message: "Model ID missing" });
+                }
+                const { _id, ...downloadData } = data;
+                const result = await downloadCollection.insertOne(downloadData);
+
+                const filter = { _id: new ObjectId(modelId) };
+                const update = { $inc: { downloads: 1 } };
+                const updated = await modelCollection.findOneAndUpdate(
+                    filter,
+                    update,
+                    { returnDocument: "after" }
+                );
+
+                res.send({
+                    success: true,
+                    message: "Download recorded and count updated",
+                    result,
+                    updatedModel: updated.value,
+                });
+            } catch (error) {
+                console.error("Download error:", error);
+                res.status(500).send({ success: false, message: "Download update failed", error });
+            }
+        });
+
 
         // Patch Method
-        // app.patch("/model/:id", verifyFirebaseToken, async (req, res) => {
-        //     const id = req.params.id;
-        //     const updateModel = req.body;
-        //     const query = { _id: new ObjectId(id) };
-
-        //     const update = {
-        //         $set: {
-        //             name: updateModel.name,
-        //             profession: updateModel.profession,
-        //         },
-        //     };
-        //     const options = {};
-        //     const result = await modelCollection.updateOne(query, update, options);
-        //     res.send(result);
-        // });
-
         app.patch("/model/:id", verifyFirebaseToken, async (req, res) => {
             try {
                 const id = req.params.id;
@@ -159,7 +176,7 @@ async function run() {
                 res.status(500).send({ error: err.message });
             }
         });
-        
+
         // Delete Method 
         app.delete("/model/:id", async (req, res) => {
             const id = req.params.id;
