@@ -97,12 +97,12 @@ async function run() {
         })
 
         // Get - My Download
-        app.get("/my-downloads", verifyFirebaseToken, async(req, res) => {
+        app.get("/my-downloads", verifyFirebaseToken, async (req, res) => {
             const email = req.query.email;
             const query = {};
             if (email) {
-                query.downloaded_by = email;  
-                if (email !== req.token_email) {  
+                query.downloaded_by = email;
+                if (email !== req.token_email) {
                     return res.status(403).send({ message: "forbidden access" })
                 }
             }
@@ -112,7 +112,7 @@ async function run() {
         })
 
         // Post Method for Download
-        app.post("/downloads",verifyFirebaseToken, async (req, res) => {
+        app.post("/downloads", verifyFirebaseToken, async (req, res) => {
             const data = req.body
             const result = await downloadCollection.insertOne(data)
             res.send(result)
@@ -149,8 +149,8 @@ async function run() {
             const email = req.query.email;
             const query = {};
             if (email) {
-                query.created_by = email;  
-                if (email !== req.token_email) {  
+                query.created_by = email;
+                if (email !== req.token_email) {
                     return res.status(403).send({ message: "forbidden access" })
                 }
             }
@@ -158,6 +158,13 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         });
+
+        // Search
+        app.get("/search", async (req, res) => {
+            const search_text = req.query.search
+            const result = await modelCollection.find({ name: { $regex: search_text, $options: "i" } }).toArray()
+            res.send(result)
+        })
 
 
         await client.db("admin").command({ ping: 1 });
@@ -173,4 +180,3 @@ run().catch(console.dir)
 app.listen(port, () => {
     console.log(`Simple Deals Server at port: ${port}`)
 });
- 
