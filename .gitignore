@@ -1,3 +1,4 @@
 node_modules/
 .env
 models-hub-firebase-admin-sdk.json
+.vercel
